@@ -2,7 +2,7 @@
 
 A lightweight Windows application that draws a visual border around the currently focused window. Designed to work seamlessly with window managers like GlazeWM to provide clear visual feedback on which window has focus.
 
-<img src="https://raw.githubusercontent.com/pchomik/window-border/master/docs/preview.gif" width="800" alt="Preview">
+<img src="https://raw.githubusercontent.com/pchomik/window-border/main/docs/preview.png" width="800" alt="Preview">
 
 ## Features
 
@@ -191,7 +191,7 @@ Contributions are welcome! Whether you want to:
 
 ## License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **GPL-3.0 license** - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
