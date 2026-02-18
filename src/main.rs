@@ -1,16 +1,15 @@
 #![windows_subsystem = "windows"]
 
+use dirs;
 use regex::Regex;
-use std::env;
 use std::fs;
-use std::path::PathBuf;
 use toml::Value;
 use windows::core::w;
 use windows::Win32::Foundation::*;
 use windows::Win32::Graphics::Direct2D::Common::*;
 use windows::Win32::Graphics::Direct2D::*;
-use windows::Win32::Graphics::Dxgi::Common::*;
 use windows::Win32::Graphics::Dwm::*;
+use windows::Win32::Graphics::Dxgi::Common::*;
 use windows::Win32::Graphics::Gdi::*;
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::UI::Accessibility::*;
@@ -19,7 +18,12 @@ use windows::Win32::UI::WindowsAndMessaging::*;
 
 // Configuration
 // #8dbcff -> R=141, G=188, B=255
-const BORDER_COLOR: D2D1_COLOR_F = D2D1_COLOR_F { r: 141.0/255.0, g: 188.0/255.0, b: 1.0, a: 1.0 };
+const BORDER_COLOR: D2D1_COLOR_F = D2D1_COLOR_F {
+    r: 141.0 / 255.0,
+    g: 188.0 / 255.0,
+    b: 1.0,
+    a: 1.0,
+};
 
 // Global state
 static mut OVERLAY_HWND: HWND = HWND(std::ptr::null_mut());
@@ -42,22 +46,27 @@ fn load_config() {
     let mut radius = 0;
     let mut regexes = Vec::new();
 
-    if let Ok(user_profile) = env::var("USERPROFILE") {
-        let path = PathBuf::from(user_profile)
-            .join(".config")
-            .join("window_border.toml");
+    if let Some(config_dir) = dirs::config_dir() {
+        let path = config_dir.join("Glint").join("config.toml");
 
         if path.exists() {
             if let Ok(content) = fs::read_to_string(&path) {
                 if let Ok(value) = content.parse::<Value>() {
-                    if let Some(w) = value.get("window_border_width").and_then(|v| v.as_integer()) {
+                    if let Some(w) = value
+                        .get("window_border_width")
+                        .and_then(|v| v.as_integer())
+                    {
                         width = w as i32;
                     }
-                    if let Some(r) = value.get("window_border_radius").and_then(|v| v.as_integer()) {
+                    if let Some(r) = value
+                        .get("window_border_radius")
+                        .and_then(|v| v.as_integer())
+                    {
                         radius = r as i32;
                     }
                     // Compile regex patterns
-                    if let Some(patterns) = value.get("ignored_windows").and_then(|v| v.as_array()) {
+                    if let Some(patterns) = value.get("ignored_windows").and_then(|v| v.as_array())
+                    {
                         for pattern in patterns {
                             if let Some(pattern_str) = pattern.as_str() {
                                 // Attempt to compile regex, ignore invalid ones
@@ -84,7 +93,8 @@ fn init_d2d() -> windows::core::Result<()> {
         let options = D2D1_FACTORY_OPTIONS {
             debugLevel: D2D1_DEBUG_LEVEL_NONE,
         };
-        let factory: ID2D1Factory = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, Some(&options))?;
+        let factory: ID2D1Factory =
+            D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, Some(&options))?;
         D2D_FACTORY = Some(factory);
     }
     Ok(())
@@ -98,7 +108,7 @@ fn main() -> windows::core::Result<()> {
         let _ = SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
         let instance = GetModuleHandleW(None)?;
-        let window_class = w!("window_border_overlay");
+        let window_class = w!("glint_overlay");
 
         let wc = WNDCLASSW {
             hCursor: LoadCursorW(None, IDC_ARROW)?,
@@ -117,7 +127,10 @@ fn main() -> windows::core::Result<()> {
             window_class,
             w!(""),
             WS_POPUP | WS_VISIBLE,
-            0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
             None,
             None,
             Some(instance.into()),
@@ -253,9 +266,16 @@ unsafe fn update_overlay() {
         let m = monitor_info.rcMonitor;
         let w = monitor_info.rcWork;
 
-         // Check if rect matches monitor (fullscreen) or work area (maximized)
-        if (rect.left == m.left && rect.top == m.top && rect.right == m.right && rect.bottom == m.bottom) ||
-           (rect.left == w.left && rect.top == w.top && rect.right == w.right && rect.bottom == w.bottom) {
+        // Check if rect matches monitor (fullscreen) or work area (maximized)
+        if (rect.left == m.left
+            && rect.top == m.top
+            && rect.right == m.right
+            && rect.bottom == m.bottom)
+            || (rect.left == w.left
+                && rect.top == w.top
+                && rect.right == w.right
+                && rect.bottom == w.bottom)
+        {
             hide_overlay(overlay_hwnd);
             return;
         }
@@ -264,7 +284,11 @@ unsafe fn update_overlay() {
     let dpi = GetDpiForWindow(active_hwnd);
     let scale_factor = dpi as f32 / USER_DEFAULT_SCREEN_DPI as f32;
     let border_width = (BORDER_WIDTH_PX as f32 * scale_factor).ceil() as i32;
-    let radius_px = if is_maximized { 0 } else { (CORNER_RADIUS_PX as f32 * scale_factor).ceil() as i32 };
+    let radius_px = if is_maximized {
+        0
+    } else {
+        (CORNER_RADIUS_PX as f32 * scale_factor).ceil() as i32
+    };
 
     // Inflate rect by border width so we draw OUTSIDE the window content (if possible)
     // Actually, usually we want it centered or inside?
@@ -283,10 +307,24 @@ unsafe fn update_overlay() {
     let width = overlay_rect.right - overlay_rect.left;
     let height = overlay_rect.bottom - overlay_rect.top;
 
-    draw_d2d_border(overlay_hwnd, width, height, border_width as f32, radius_px as f32, &overlay_rect);
+    draw_d2d_border(
+        overlay_hwnd,
+        width,
+        height,
+        border_width as f32,
+        radius_px as f32,
+        &overlay_rect,
+    );
 }
 
-unsafe fn draw_d2d_border(hwnd: HWND, width: i32, height: i32, border_width: f32, radius: f32, screen_rect: &RECT) {
+unsafe fn draw_d2d_border(
+    hwnd: HWND,
+    width: i32,
+    height: i32,
+    border_width: f32,
+    radius: f32,
+    screen_rect: &RECT,
+) {
     // 1. Create a memory DC compatible with the screen
     let screen_dc = GetDC(None);
     let mem_dc = CreateCompatibleDC(Some(screen_dc));
@@ -306,14 +344,7 @@ unsafe fn draw_d2d_border(hwnd: HWND, width: i32, height: i32, border_width: f32
     };
 
     let mut bits: *mut std::ffi::c_void = std::ptr::null_mut();
-    let bitmap = CreateDIBSection(
-        Some(screen_dc),
-        &bmi,
-        DIB_RGB_COLORS,
-        &mut bits,
-        None,
-        0
-    );
+    let bitmap = CreateDIBSection(Some(screen_dc), &bmi, DIB_RGB_COLORS, &mut bits, None, 0);
 
     if bitmap.is_err() {
         let _ = DeleteDC(mem_dc);
@@ -341,10 +372,20 @@ unsafe fn draw_d2d_border(hwnd: HWND, width: i32, height: i32, border_width: f32
         let rt_result = factory.CreateDCRenderTarget(&props);
 
         if let Ok(rt) = rt_result {
-            let rect = RECT { left: 0, top: 0, right: width, bottom: height };
+            let rect = RECT {
+                left: 0,
+                top: 0,
+                right: width,
+                bottom: height,
+            };
             if rt.BindDC(mem_dc, &rect).is_ok() {
                 rt.BeginDraw();
-                rt.Clear(Some(&D2D1_COLOR_F { r: 0.0, g: 0.0, b: 0.0, a: 0.0 }));
+                rt.Clear(Some(&D2D1_COLOR_F {
+                    r: 0.0,
+                    g: 0.0,
+                    b: 0.0,
+                    a: 0.0,
+                }));
 
                 if let Ok(brush) = rt.CreateSolidColorBrush(&BORDER_COLOR, None) {
                     // Draw Rounded Rectangle
@@ -379,8 +420,14 @@ unsafe fn draw_d2d_border(hwnd: HWND, width: i32, height: i32, border_width: f32
 
     // 4. Update Layered Window
     let pt_src = POINT { x: 0, y: 0 };
-    let pt_dst = POINT { x: screen_rect.left, y: screen_rect.top };
-    let size = SIZE { cx: width, cy: height };
+    let pt_dst = POINT {
+        x: screen_rect.left,
+        y: screen_rect.top,
+    };
+    let size = SIZE {
+        cx: width,
+        cy: height,
+    };
     let blend = BLENDFUNCTION {
         BlendOp: AC_SRC_OVER as u8,
         BlendFlags: 0,
@@ -422,10 +469,23 @@ unsafe fn draw_d2d_border(hwnd: HWND, width: i32, height: i32, border_width: f32
 }
 
 unsafe fn hide_overlay(hwnd: HWND) {
-    let _ = SetWindowPos(hwnd, None, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
+    let _ = SetWindowPos(
+        hwnd,
+        None,
+        0,
+        0,
+        0,
+        0,
+        SWP_HIDEWINDOW | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER,
+    );
 }
 
-unsafe extern "system" fn def_window_proc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
+unsafe extern "system" fn def_window_proc(
+    hwnd: HWND,
+    msg: u32,
+    wparam: WPARAM,
+    lparam: LPARAM,
+) -> LRESULT {
     match msg {
         WM_DESTROY => {
             PostQuitMessage(0);

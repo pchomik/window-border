@@ -1,11 +1,12 @@
 [package]
-name = "window_border"
+name = "Glint"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 toml = "0.8"
 regex = "1.10"
+dirs = "5"
 windows = { version = "0.62.2", features = [
     "Win32_Foundation",
     "Win32_UI_WindowsAndMessaging",

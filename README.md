@@ -1,8 +1,8 @@
-# Window Border
+# Glint
 
 A lightweight Windows application that draws a visual border around the currently focused window. Designed to work seamlessly with window managers like GlazeWM to provide clear visual feedback on which window has focus.
 
-<img src="https://raw.githubusercontent.com/pchomik/window-border/main/docs/preview.png" width="800" alt="Preview">
+<img src="https://raw.githubusercontent.com/pchomik/glint/main/docs/preview.png" width="800" alt="Preview">
 
 ## Features
 
@@ -15,7 +15,7 @@ A lightweight Windows application that draws a visual border around the currentl
 
 ## Configuration
 
-The application reads configuration from `%USERPROFILE%\.config\window_border.toml`.
+The application reads configuration from `%APPDATA%\Glint\config.toml` (i.e., `C:\Users\<YourUsername>\AppData\Roaming\Glint\config.toml`).
 
 ### Available Options
 
@@ -125,8 +125,8 @@ ignored_windows = [
 1. **Clone the repository:**
 
 ```bash
-git clone https://github.com/yourusername/window-border.git
-cd window-border
+git clone https://github.com/yourusername/glint.git
+cd glint
 ```
 
 2. **Build the release version:**
@@ -138,7 +138,7 @@ cargo build --release
 3. **The executable will be located at:**
 
 ```
-target/release/window_border.exe
+target/release/Glint.exe
 ```
 
 ### Running in Development
@@ -151,7 +151,7 @@ cargo run
 
 ## Integration with GlazeWM
 
-Window Border is designed to work as a startup application with [GlazeWM](https://github.com/lars-derichter/glazewm), a tiling window manager for Windows.
+Glint is designed to work as a startup application with [GlazeWM](https://github.com/lars-derichter/glazewm), a tiling window manager for Windows.
 
 ### Adding to GlazeWM Configuration
 
@@ -160,13 +160,13 @@ Open your GlazeWM configuration file located at `%USERPROFILE%\.glzr\glazewm\con
 ```yaml
 general:
   # Commands to run when the WM has started.
-  startup_commands: ["shell-exec c:\\Users\\user\\.bin\\window_border.exe"]
+  startup_commands: ["shell-exec c:\\Users\\user\\.bin\\Glint.exe"]
 
   # Commands to run just before the WM is shutdown.
-  shutdown_commands: ["shell-exec taskkill /IM window_border.exe /F"]
+  shutdown_commands: ["shell-exec taskkill /IM Glint.exe /F"]
 ```
 
-> **Note:** Update the path `c:\Users\user\.bin\window_border.exe` to match where you've placed the executable.
+> **Note:** Update the path `c:\Users\user\.bin\Glint.exe` to match where you've placed the executable.
 
 ### Important: Windows SmartScreen Warning
 
@@ -174,7 +174,7 @@ Since this application is not signed and not distributed through the Windows Sto
 
 **To approve the application:**
 
-1. Run `window_border.exe` manually for the first time
+1. Run `Glint.exe` manually for the first time
 2. When Windows shows the SmartScreen warning, click **"More info"**
 3. Click **"Run anyway"** to approve the binary
 
