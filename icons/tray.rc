@@ -1,0 +1,3 @@
+aa-exe-icon ICON "tray.ico"
+main-icon ICON "tray.ico"
+tray-default ICON "tray.ico"

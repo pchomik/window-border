@@ -4,6 +4,7 @@ use dirs;
 use regex::Regex;
 use std::fs;
 use toml::Value;
+use tray_item::{IconSource, TrayItem};
 use windows::core::w;
 use windows::Win32::Foundation::*;
 use windows::Win32::Graphics::Direct2D::Common::*;
@@ -101,6 +102,11 @@ fn init_d2d() -> windows::core::Result<()> {
 }
 
 fn main() -> windows::core::Result<()> {
+    let mut tray: TrayItem = TrayItem::new("Glint", IconSource::Resource("main-icon")).unwrap();
+    tray.add_label("Glint").unwrap();
+    tray.add_menu_item("Quit", || std::process::exit(0))
+        .unwrap();
+
     load_config();
     init_d2d()?;
 
